@@ -1,6 +1,8 @@
 # 99音乐下载并添加到Soundpad神器
 
 > 这什么稀奇名字
+>
+> 勤劳使人懒惰~
 
 欢迎使用99音乐下载并添加到Soundpad神器！
 
@@ -71,6 +73,6 @@ python main01.py
 
 ## 写在后面
 
-本程序使用`GNU General Public License v2.0`协议，如果您对程序有建议或者bug反馈，欢迎fork我的仓库或向我提出`Issue`
+本程序使用`GNU General Public License v2.0`许可证，如果您对程序有建议或者bug反馈，欢迎fork我的仓库或向我提出`Issue`
 
 玩的开心=)
