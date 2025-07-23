@@ -41,11 +41,11 @@ target_url = https://music.163.com
 
 1. 在steam库中打开soundpad页面并点击齿轮图标
 
-   ![ca3376ff8e0d74d7b81acbb73affcfd9](D:\99之没事写的小程序\自动下载+soundpad自动导入\01-github\images\document\ca3376ff8e0d74d7b81acbb73affcfd9.png)
+   ![ca3376ff8e0d74d7b81acbb73affcfd9]((https://raw.githubusercontent.com/windows99-hue/99SoundpadAdder/refs/heads/main/images/document/ca3376ff8e0d74d7b81acbb73affcfd9.png))
 
 2. 将鼠标悬停在`管理`选项卡中，点击`浏览本地文件`
 
-![75a1ba4413af1daf54eaafea15acae31](D:\99之没事写的小程序\自动下载+soundpad自动导入\01-github\images\document\75a1ba4413af1daf54eaafea15acae31.png)
+![75a1ba4413af1daf54eaafea15acae31]((https://raw.githubusercontent.com/windows99-hue/99SoundpadAdder/refs/heads/main/images/document/75a1ba4413af1daf54eaafea15acae31.png))
 
 3. 复制`Soundpad.exe`的文件绝对路径即可
 
