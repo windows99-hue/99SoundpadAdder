@@ -81,4 +81,6 @@ On subsequent launches, simply select the `Download songs` option.
 
 This program uses the `GNU General Public License v2.0`license. If you have suggestions or bug reports, feel free to fork my repository or submit an `Issue`.
 
+refer to:[Mass1milian0/soundpad-python-youtube-adder](https://github.com/Mass1milian0/soundpad-python-youtube-adder)
+
 Have fun! =)

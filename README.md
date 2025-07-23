@@ -75,4 +75,6 @@ python main01.py
 
 本程序使用`GNU General Public License v2.0`许可证，如果您对程序有建议或者bug反馈，欢迎fork我的仓库或向我提出`Issue`
 
+参考：[Mass1milian0/soundpad-python-youtube-adder](https://github.com/Mass1milian0/soundpad-python-youtube-adder)
+
 玩的开心=)
