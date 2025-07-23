@@ -71,6 +71,8 @@ python main01.py
 
 其余启动时，直接选择`下载歌曲`选项
 
+**在使用中，确保soundpad处于开启状态！**
+
 ## 写在后面
 
 本程序使用`GNU General Public License v2.0`许可证，如果您对程序有建议或者bug反馈，欢迎fork我的仓库或向我提出`Issue`

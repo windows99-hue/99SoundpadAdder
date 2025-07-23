@@ -77,6 +77,8 @@ This will start the program. Follow the prompts to select your preferred music p
 
 On subsequent launches, simply select the `Download songs` option.
 
+**Ensure that Soundpad is turned on during use!**
+
 ## Final Notes
 
 This program uses the `GNU General Public License v2.0`license. If you have suggestions or bug reports, feel free to fork my repository or submit an `Issue`.
