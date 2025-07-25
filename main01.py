@@ -152,17 +152,21 @@ def download_the_file(url, FileName, save_path):
         add_sound_to_soundpad(save_path)
 
 def handle_kugou(page):
-    def handle_response(response):
+    # 存储监听器引用以便后续移除
+    def on_response(response):
         global songinfo
         if "songinfo" in response.url:
             songinfo = response.url
     
-    # 移除之前的监听器
-    page.remove_all_listeners("response")
-    page.on("response", handle_response)
+    # 添加监听器并保存引用
+    response_listener = lambda response: on_response(response)
+    page.on("response", response_listener)
     
     print_status("请在网页中搜索您想下载的歌曲并进入音乐播放页, 在音乐播放后按F8继续, 按ESC结束程序")
     keyboard.wait("f8")
+    
+    # 移除监听器
+    page.remove_listener("response", response_listener)
     
     if not songinfo:
         print_error("无法找到文件，请确认浏览器是否运行正常!")
@@ -171,16 +175,21 @@ def handle_kugou(page):
     get_the_file(songinfo)
 
 def handle_netcloud(page):
-    def handle_response(response):
+    # 存储监听器引用以便后续移除
+    def on_response(response):
         global songinfo
         if ".m4a?" in response.url:
             songinfo = response.url
     
-    page.remove_all_listeners("response")
-    page.on("response", handle_response)
+    # 添加监听器并保存引用
+    response_listener = lambda response: on_response(response)
+    page.on("response", response_listener)
     
     print_status("请在网页中搜索您想下载的歌曲并进入音乐播放页, 在音乐播放后按F8继续, 按ESC结束程序")
     keyboard.wait("f8")
+    
+    # 移除监听器
+    page.remove_listener("response", response_listener)
     
     if not songinfo:
         print_error("无法找到文件，请确认浏览器是否运行正常!")
