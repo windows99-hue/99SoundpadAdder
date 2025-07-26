@@ -31,6 +31,7 @@ pip install -r requirements.txt
 SoundpadPath = D:\SteamLibrary\steamapps\common\Soundpad\Soundpad.exe
 SavePath = D:\Temp
 AddSoundPad = True
+CookiePath = D:\99SoundPadAdder\cookies.json
 
 [kugou]
 target_url = https://www.kugou.com/yy/html/search.html#searchType=song&searchKeyWord=
@@ -54,6 +55,10 @@ target_url = https://music.163.com
 请将`SavePath`设置为您想**将音乐文件存储的路径**
 
 `AddSoundPad`是一个布尔开关，当值为`True`时，程序会在下载完音频后自动导入soundpad，如果为`False`，那么程序会在下载完音频后自动准备下一轮下载
+
+`CookiePath`为程序存储您的登录信息的地方
+
+**请把所有选项写入绝对路径**
 
 `target_url`为默认设置
 

@@ -1,285 +1,285 @@
-from seleniumwire import webdriver
-from selenium.webdriver.chrome.options import Options
-import time
-import json
-from clc99 import *
-import os
-import sys
-import requests
-from tqdm import tqdm
-import re
-import keyboard
-import configparser
-import win32file
-import pywintypes
-import win32api
-from urllib.parse import quote
+from seleniumwire import webdriver  
+from selenium.webdriver.chrome.options import Options  
+import time  
+import json  
+from clc99 import *  
+import os  
+import sys  
+import requests  
+from tqdm import tqdm  
+import re  
+import keyboard  
+import configparser  
+import win32file  
+import pywintypes  
+import win32api  
+from urllib.parse import quote  
 
-initsystem()
+initsystem()  
 
-print_good("Welcome to the 99 Kugou Music Downloader + Soundpad Importer!")
-print_warning("This program is written by Windows99-hue")
-print_uquestion("This program will save your or other users' personal login information (cookies). This program will not store your personal information anywhere other than your computer. Please decide whether to use this program based on your personal needs.")
+print_good("Welcome to the 99 Kugou Music Downloader + Soundpad Importer Tool!")  
+print_warning("This program is written by Windows99-hue and is prohibited for commercial use!")  
+print_uquestion("This program will save your or other users' personal login information (cookies). The program will not store your personal information anywhere other than your computer. Please decide whether to use this program based on your personal needs.")  
 
-print_status("Initializing the program....")
+print_status("Initializing the program....")  
 
-self_path = os.path.abspath(__file__)
-self_dir = os.path.dirname(__file__) + '/'
-file_path = os.path.abspath(__file__)
-file_dir = os.path.dirname(file_path) + '/'
-media_pattern = re.compile(r'.*\.(m4a)$', re.IGNORECASE)
-# Set environment variables to disable all Chrome internal logs
-os.environ["GLOG_minloglevel"] = "3"  # FATAL level
-os.environ["GOOGLE_STRIP_LOG"] = "1"  # Strip all logs
+self_path = os.path.abspath(__file__)  
+self_dir = os.path.dirname(__file__) + '/'  
+file_path = os.path.abspath(__file__)  
+file_dir = os.path.dirname(file_path) + '/'  
+media_pattern = re.compile(r'.*\.(m4a)$', re.IGNORECASE)  
+# Set environment variables to disable all Chrome internal logs  
+os.environ["GLOG_minloglevel"] = "3"  # FATAL level  
+os.environ["GOOGLE_STRIP_LOG"] = "1"  # Strip all logs  
 
-print_uquestion("Please select the music platform you want to download from")
-while True:
-    cmd = input('''
-    1) Kugou Music
-    2) NetEase Cloud Music
-    3) Exit the program
-    
-''')
+print_uquestion("Please select the music platform you want to download from")  
+while True:  
+    cmd = input('''  
+    1) Kugou Music  
+    2) NetEase Cloud Music  
+    3) Exit the program  
 
-    if cmd == "1":
-        version = "kugou"
-        break
-    elif cmd == "2":
-        version = "netcloud"
-        break
-    elif cmd == "3":
-        print_warning("Exiting the program")
-        os._exit(0)
-    else:
-        print_error("Unknown command, please try again")
+''')  
 
-##### Read configuration and initialize them
-config = configparser.ConfigParser()
-config.read(self_dir+"configs.ini",encoding="utf-8")
-SavePath = config.get("settings", "SavePath")
-soundpad_path = config.get("settings", "SoundpadPath")
-addsoundpad = config.getboolean("settings", "AddSoundpad")
+    if cmd == "1":  
+        version = "kugou"  
+        break  
+    elif cmd == "2":  
+        version = "netcloud"  
+        break  
+    elif cmd == "3":  
+        print_warning("Exiting the program")  
+        os._exit(0)  
+    else:  
+        print_error("Unknown command, please re-enter")  
 
-WAIT_TIME = 1
-songinfo = None
-target_url = config.get(version, "target_url")
+##### Read the configuration and initialize them  
+config = configparser.ConfigParser()  
+config.read(self_dir + "configs.ini", encoding="utf-8")  
+SavePath = config.get("settings", "SavePath")  
+soundpad_path = config.get("settings", "SoundpadPath")  
+addsoundpad = config.getboolean("settings", "AddSoundpad")  
+cookies_path = config.get("settings", "CookiePath")  
 
-options = {
-    'disable_capture': True,
-}
+if not os.path.isabs(cookies_path):  
+    script_dir = os.path.dirname(os.path.abspath(__file__))  
+    cookies_path = os.path.join(script_dir, cookies_path)  
 
-chrome_options = webdriver.ChromeOptions()
-chrome_options.add_experimental_option("excludeSwitches", ["enable-logging"])  # Disable logs
+WAIT_TIME = 1  
+songinfo = None  
+target_url = config.get(version, "target_url")  
 
-driver = webdriver.Chrome(seleniumwire_options=options,options=chrome_options)
+options = {  
+    'disable_capture': False,  
+}  
 
+chrome_options = webdriver.ChromeOptions()  
+chrome_options.add_experimental_option("excludeSwitches", ["enable-logging"])  # Disable logging  
 
-    
-def check_add_status(response: str) -> bool:
-    if response == "R-200":
-        return True
-    else:
-        return False
+driver = webdriver.Chrome(seleniumwire_options=options, options=chrome_options)  
 
-def add_sound_to_soundpad(file_path: str) -> bool:
-    if not os.path.exists(file_path):
-        print_error(f"File does not exist: {file_path}")
-        return False
+def check_add_status(response: str) -> bool:  
+    if response == "R-200":  
+        return True  
+    else:  
+        return False  
 
-    try:
-        # Connect to Soundpad's named pipe
-        pipe_name = r'\\.\pipe\sp_remote_control'
-        handle = win32file.CreateFile(
-            pipe_name,
-            win32file.GENERIC_READ | win32file.GENERIC_WRITE,
-            0,
-            None,
-            win32file.OPEN_EXISTING,
-            0,
-            None
-        )
-        
-        # Send DoAddSound command
-        command = f'DoAddSound("{os.path.abspath(file_path)}")'
-        print_status(command)
-        win32file.WriteFile(handle, str.encode(command,encoding="GBK"))
-        response = win32file.ReadFile(handle, 4096)[1].decode().strip('\x00')
-        print_status(f"Soundpad responded")
-        if check_add_status(response):
-            print_good("Audio file added successfully")
-            return True
-        else:
-            print_error(f"Failed to add audio file: {response}")
-            return False
-        
+def add_sound_to_soundpad(file_path: str) -> bool:  
+    if not os.path.exists(file_path):  
+        print_error(f"File does not exist: {file_path}")  
+        return False  
 
-    except pywintypes.error as e:
-        print_error(f"Pipe connection failed: {e}")
-        return False
-    finally:
-        if 'handle' in locals():
-            win32file.CloseHandle(handle)
+    try:  
+        # Connect to Soundpad's named pipe  
+        pipe_name = r'\\.\pipe\sp_remote_control'  
+        handle = win32file.CreateFile(  
+            pipe_name,  
+            win32file.GENERIC_READ | win32file.GENERIC_WRITE,  
+            0,  
+            None,  
+            win32file.OPEN_EXISTING,  
+            0,  
+            None  
+        )  
 
-def save_login_info():
-    print_status("Please log in to your platform account normally in the web page, then press Enter when done",end="")
-    input("")
-    time.sleep(WAIT_TIME)
-    print_status("Saving your login information locally:")
-    cookies = driver.get_cookies()
-    cookie_str = json.dumps(cookies)
-    with open(file_dir+'cookies.json', 'w') as f:
-        f.write(cookie_str)
-    print_good("Saved successfully!")
-    
+        # Send the DoAddSound command  
+        command = f'DoAddSound("{os.path.abspath(file_path)}")'  
+        print_status(command)  
+        win32file.WriteFile(handle, str.encode(command, encoding="GBK"))  
+        response = win32file.ReadFile(handle, 4096)[1].decode().strip('\x00')  
+        print_status(f"Soundpad has responded")  
+        if check_add_status(response):  
+            print_good("Audio file added successfully")  
+            return True  
+        else:  
+            print_error(f"Failed to add audio file: {response}")  
+            return False  
 
-def get_login_info():
-    with open(file_dir+'cookies.json', 'r') as f:
-        cookie_str = f.read()
-        cookies = json.loads(cookie_str)
-    for c in cookies:
-        driver.add_cookie(c)
-    time.sleep(WAIT_TIME)
-    driver.refresh()
-    print_good("Loading complete, please verify if the user is correct")
+    except pywintypes.error as e:  
+        print_error(f"Failed to connect to the pipe: {e}")  
+        return False  
+    finally:  
+        if 'handle' in locals():  
+            win32file.CloseHandle(handle)  
 
-def clean_filename(filename):
-    # Replace illegal characters with underscores
-    return re.sub(r'[\\/:*?"<>|]', '_', filename)
+def save_login_info():  
+    print_status("Please log in to your platform account on the webpage as usual, then press Enter", end="")  
+    input("")  
+    time.sleep(WAIT_TIME)  
+    print_status("Saving your login information locally:")  
+    cookies = driver.get_cookies()  
+    cookie_str = json.dumps(cookies)  
+    with open(cookies_path, 'w') as f:  
+        f.write(cookie_str)  
+    print_good("Saved successfully!")  
 
-def get_the_file(url):
-    response = requests.get(url)
-    data = json.loads(response.text)['data']
-    PlayUrl = data['play_url']
-    FileName = data['audio_name'] + ".mp3"
-    FileName = clean_filename(FileName)
-    print(file_dir + FileName)
-    download_the_file(PlayUrl,FileName , SavePath + "\\" + FileName)
+def get_login_info():  
+    with open(cookies_path, 'r') as f:  
+        cookie_str = f.read()  
+        cookies = json.loads(cookie_str)  
+    for c in cookies:  
+        driver.add_cookie(c)  
+    time.sleep(WAIT_TIME)  
+    driver.refresh()  
+    print_good("Loading complete, please verify if the user is correct")  
 
-def get_the_file_netcloud(url):
-    #fuck...
-    song_title = driver.title[2:]
-    print_status(song_title)
+def clean_filename(filename):  
+    # Replace illegal characters with underscores  
+    return re.sub(r'[\\/:*?"<>|]', '_', filename)  
 
-    download_the_file(url, song_title + ".m4a", SavePath + "\\" + song_title + ".m4a")
-    
+def get_the_file(url):  
+    response = requests.get(url)  
+    data = json.loads(response.text)['data']  
+    PlayUrl = data['play_url']  
+    FileName = data['audio_name'] + ".mp3"  
+    FileName = clean_filename(FileName)  
+    print(file_dir + FileName)  
+    download_the_file(PlayUrl, FileName, SavePath + "\\" + FileName)  
 
-def download_the_file(url,FileName, save_path):
-    response = requests.get(url, stream=True)
-    response.raise_for_status()
+def get_the_file_netcloud(url):  
+    # Damn...  
+    song_title = driver.title[2:]  
+    print_status(song_title)  
 
-    total_size = int(response.headers.get('content-length', 0))
+    download_the_file(url, song_title + ".m4a", SavePath + "\\" + song_title + ".m4a")  
 
-    with open(save_path, 'wb') as file, tqdm(
-        desc=FileName,  # Progress bar description
-        total=total_size,  # Total size
-        unit='B',  # Unit
-        unit_scale=True,  # Auto-scale unit
-        unit_divisor=1024,  # Unit divisor
-    ) as bar:
-        for chunk in response.iter_content(chunk_size=8192):
-            file.write(chunk)
-            bar.update(len(chunk))  # Update progress bar
+def download_the_file(url, FileName, save_path):  
+    response = requests.get(url, stream=True)  
+    response.raise_for_status()  
 
-    save_path = save_path.replace("/", "\\")
+    total_size = int(response.headers.get('content-length', 0))  
 
-    print_ok(f"File saved to: {save_path}")
+    with open(save_path, 'wb') as file, tqdm(  
+        desc=FileName,  # Progress bar description  
+        total=total_size,  # Total size  
+        unit='B',  # Unit  
+        unit_scale=True,  # Auto-scale unit  
+        unit_divisor=1024,  # Unit divisor  
+    ) as bar:  
+        for chunk in response.iter_content(chunk_size=8192):  
+            file.write(chunk)  
+            bar.update(len(chunk))  # Update progress bar  
 
-    if addsoundpad:
-        print_status("Adding file to Soundpad...")
-        add_sound_to_soundpad(save_path)
+    save_path = save_path.replace("/", "\\")  
 
-def be_start():
-    # Close all tabs
+    print_ok(f"File saved to: {save_path}")  
 
-    for handle in reversed(driver.window_handles):
-        if(len(driver.window_handles) == 1):
-            break
-        driver.switch_to.window(handle)
-        driver.close()
+    if addsoundpad:  
+        print_status("Adding the file to Soundpad...")  
+        add_sound_to_soundpad(save_path)  
 
-    # Open a new tab
-    #driver.execute_script("window.open('about:blank')")
+def be_start():  
+    # Close all tabs  
 
-    # Switch to new tab
-    new_window_handle = driver.window_handles[0]
-    driver.switch_to.window(new_window_handle)
+    for handle in reversed(driver.window_handles):  
+        if (len(driver.window_handles) == 1):  
+            break  
+        driver.switch_to.window(handle)  
+        driver.close()  
 
-    # Open a webpage in the new tab
-    driver.get(target_url)
+    # Open a new tab  
+    # driver.execute_script("window.open('about:blank')")  
 
-def on_esc_pressed():
-    print_status("ESC pressed, exiting program")
-    print_status("Closing browser...")
-    driver.quit()
-    os._exit(0)
+    # Switch to the new tab  
+    new_window_handle = driver.window_handles[0]  
+    driver.switch_to.window(new_window_handle)  
 
-print_good("Initialization complete!")
-print_status("Launching browser....")
+    # Open a webpage in the new tab  
+    driver.get(target_url)  
 
-try:
-    driver.get(target_url)
-    print_good("Please don't close the browser, it will be closed automatically when done")
-    time.sleep(WAIT_TIME)
-    driver.refresh()
-    time.sleep(WAIT_TIME)
-    print_uquestion("Please select the operation you need")
-    while True:
-        print('''
-    1) Log in to account
-    2) Download songs
-    3) Exit program
-    ''')
-        cmd = input("Please enter command:")
-        if(cmd == '1'):
-            save_login_info()
-        elif (cmd == '2'):
-            get_login_info()
-            break
-        elif (cmd == '3'):
-            print_status("Exiting program...")
-            sys.exit()
-        else:
-            print("Unknown command, please try again")
-    time.sleep(WAIT_TIME)
+def on_esc_pressed():  
+    print_status("ESC pressed, exiting the program")  
+    print_status("Closing the browser...")  
+    driver.quit()  
+    os._exit(0)  
 
-    while True:
+print_good("Initialization complete!")  
+print_status("Starting the browser....")  
 
-        print_status("Please search for the song you want to download in the web page and enter the music playback page. After the music starts playing, press F8 to continue, or ESC to exit the program")
-        keyboard.add_hotkey('esc', on_esc_pressed)
-        keyboard.wait("f8")
-        if version == "kugou":
-            for request in driver.requests:
-                if request.response:
-                    if("songinfo" in request.url):
-                        songinfo = request.url
-            if(not songinfo):
-                print_error("Unable to find file, please confirm if the browser is working properly!")
-            else:
-                get_the_file(songinfo)
-        elif version == "netcloud":
-            recent_requests = list(driver.requests)[-20:] #Slice to prevent memory explosion
-            
-            m4a_requests = [
-                req for req in driver.requests 
-                if req.response and ".m4a?" in req.url
-            ] #Find latest m4a
-            
-            if not m4a_requests:
-                print_error("Unable to find file, please confirm if the browser is working properly!")
-                continue
-            
-            latest_request = m4a_requests[-1]  # Get the latest request
-            
-            if songinfo == latest_request.url:
-                print_status("same url, skipping...")
-                continue
-                
-            print_good("Found song file")
-            songinfo = latest_request.url
-            get_the_file_netcloud(songinfo)
+try:  
+    driver.get(target_url)  
+    print_good("Please do not close the browser. The program will close it automatically when finished.")  
+    time.sleep(WAIT_TIME)  
+    driver.refresh()  
+    time.sleep(WAIT_TIME)  
+    print_uquestion("Please select the operation you need")  
+    while True:  
+        print('''  
+    1) Log in to account  
+    2) Download songs  
+    3) Exit the program  
+    ''')  
+        cmd = input("Please enter the command:")  
+        if (cmd == '1'):  
+            save_login_info()  
+        elif (cmd == '2'):  
+            get_login_info()  
+            break  
+        elif (cmd == '3'):  
+            print_status("Exiting the program...")  
+            sys.exit()  
+        else:  
+            print("Unknown command, please re-enter")  
+    time.sleep(WAIT_TIME)  
 
-        be_start()
-        
-finally:
-    print_status("Closing browser...")
-    driver.quit()
+    while True:  
+
+        print_status("Please search for the song you want to download on the webpage and enter the music playback page. After the music starts playing, press F8 to continue or ESC to exit the program.")  
+        keyboard.add_hotkey('esc', on_esc_pressed)  
+        keyboard.wait("f8")  
+        if version == "kugou":  
+            for request in driver.requests:  
+                if request.response:  
+                    if ("songinfo" in request.url):  
+                        songinfo = request.url  
+            if songinfo == None:  
+                print_error("Unable to find the file. Please confirm if the browser is functioning properly!")  
+            else:  
+                get_the_file(songinfo)  
+        elif version == "netcloud":  
+            recent_requests = list(driver.requests)[-20:]  # Slice to prevent memory overload  
+
+            m4a_requests = [  
+                req for req in driver.requests  
+                if req.response and ".m4a?" in req.url  
+            ]  # Find the latest .m4a  
+
+            if not m4a_requests:  
+                print_error("Unable to find the file. Please confirm if the browser is functioning properly!")  
+                continue  
+
+            latest_request = m4a_requests[-1]  # Get the latest request  
+
+            if songinfo == latest_request.url:  
+                print_status("Same URL, skipping...")  
+                continue  
+
+            print_good("Found the song file")  
+            songinfo = latest_request.url  
+            get_the_file_netcloud(songinfo)  
+
+        be_start()  
+
+finally:  
+    print_status("Closing the browser...")  
+    driver.quit()  

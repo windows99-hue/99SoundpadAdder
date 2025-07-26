@@ -70,7 +70,7 @@ songinfo = None
 target_url = config.get(version, "target_url")
 
 options = {
-    'disable_capture': True,
+    'disable_capture': False,
 }
 
 chrome_options = webdriver.ChromeOptions()
@@ -257,7 +257,7 @@ try:
                 if request.response:
                     if("songinfo" in request.url):
                         songinfo = request.url
-            if(not songinfo):
+            if songinfo == None:
                 print_error("无法找到文件，请确认浏览器是否运行正常!")
             else:
                 get_the_file(songinfo)
