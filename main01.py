@@ -59,6 +59,11 @@ config.read(self_dir+"configs.ini",encoding="utf-8")
 SavePath = config.get("settings", "SavePath")
 soundpad_path = config.get("settings", "SoundpadPath")
 addsoundpad = config.getboolean("settings", "AddSoundpad")
+cookies_path = config.get("settings", "CookiePath")
+
+if not os.path.isabs(cookies_path):
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    cookies_path = os.path.join(script_dir, cookies_path)
 
 WAIT_TIME = 1
 songinfo = None
@@ -127,13 +132,13 @@ def save_login_info():
     print_status("正在保存你的登录信息到本地:")
     cookies = driver.get_cookies()
     cookie_str = json.dumps(cookies)
-    with open(file_dir+'cookies.json', 'w') as f:
+    with open(cookies_path, 'w') as f:
         f.write(cookie_str)
     print_good("保存成功!")
     
 
 def get_login_info():
-    with open(file_dir+'cookies.json', 'r') as f:
+    with open(cookies_path, 'r') as f:
         cookie_str = f.read()
         cookies = json.loads(cookie_str)
     for c in cookies:
