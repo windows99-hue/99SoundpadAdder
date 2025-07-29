@@ -15,6 +15,7 @@ import pywintypes
 import win32api
 from urllib.parse import quote
 import hashlib
+from error_chars import contains_invaild_char
 
 initsystem()
 
@@ -54,15 +55,6 @@ while True:
     else:
         print_error("未知的指令，请重新输入")
 
-    
-def contains_korean(text):
-    for char in text:
-        if ('\u1100' <= char <= '\u11FF' or
-            '\u3130' <= char <= '\u318F' or
-            '\uAC00' <= char <= '\uD7AF'):
-            return True
-    return False
-
 #####读取配置并初始化他们
 config = configparser.ConfigParser()
 config.read(self_dir+"configs.ini",encoding="utf-8")
@@ -71,8 +63,8 @@ soundpad_path = config.get("settings", "SoundpadPath")
 addsoundpad = config.getboolean("settings", "AddSoundpad")
 cookies_path = config.get("settings", "CookiePath")
 
-if contains_korean(SavePath):
-    print_error("检测到保存路径包含韩国字符，请修改配置文件中的保存路径")
+if contains_invaild_char(SavePath):
+    print_error("检测到保存路径包含不识别字符，请修改配置文件中的保存路径")
     sys.exit(1)
 
 if not os.path.isabs(cookies_path):
@@ -209,8 +201,8 @@ def download_the_file(url,FileName, save_path):
 
     print_ok(f"文件已保存到: {save_path}")
 
-    if contains_korean(save_path):
-        print_warning("检测到文件名包含韩国字符，即将使用md5修复，请注意")
+    if contains_invaild_char(save_path):
+        print_warning("检测到文件名包含非法字符，即将使用md5修复，请注意")
         md5_hash = mp3_to_md5(save_path)
         os.rename(save_path, save_path.replace(FileName, md5_hash + ".mp3"))
         save_path = save_path.replace(FileName, md5_hash + ".mp3")

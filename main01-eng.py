@@ -15,6 +15,7 @@ import pywintypes
 import win32api  
 from urllib.parse import quote  
 import hashlib
+from error_chars import contains_invaild_char
 
 initsystem()  
 
@@ -54,14 +55,6 @@ while True:
     else:  
         print_error("Unknown command, please re-enter")  
 
-def contains_korean(text):
-    for char in text:
-        if ('\u1100' <= char <= '\u11FF' or
-            '\u3130' <= char <= '\u318F' or
-            '\uAC00' <= char <= '\uD7AF'):
-            return True
-    return False
-
 ##### Read the configuration and initialize them  
 config = configparser.ConfigParser()  
 config.read(self_dir + "configs.ini", encoding="utf-8")  
@@ -74,8 +67,8 @@ if not os.path.isabs(cookies_path):
     script_dir = os.path.dirname(os.path.abspath(__file__))  
     cookies_path = os.path.join(script_dir, cookies_path)  
 
-if contains_korean(SavePath):
-    print_error("Detected that the save path contains Korean characters, please modify the save path in the configuration file.")
+if contains_invaild_char(SavePath):
+    print_error("Detected that the save path contains invalid characters, please modify the save path in the configuration file.")
     sys.exit(1)
 
 WAIT_TIME = 1  
@@ -204,8 +197,8 @@ def download_the_file(url, FileName, save_path):
 
     save_path = save_path.replace("/", "\\")
 
-    if contains_korean(save_path):
-        print_warning("Find Korean Characters! Fixed.")
+    if contains_invaild_char(save_path):
+        print_warning("Find invalid Characters! Fixed.")
         md5_hash = mp3_to_md5(save_path)
         os.rename(save_path, save_path.replace(FileName, md5_hash + ".mp3"))
         save_path = save_path.replace(FileName, md5_hash + ".mp3")
