@@ -189,11 +189,6 @@ def mp3_to_md5(file_path):
 
 def download_the_file(url,FileName, save_path):
 
-    if contains_korean(save_path):
-        print_warning("检测到文件名包含韩国字符，即将使用md5修复，请注意")
-        md5_hash = mp3_to_md5(save_path)
-        save_path = save_path.replace(FileName, md5_hash + ".mp3")
-
     response = requests.get(url, stream=True)
     response.raise_for_status()
 
@@ -213,6 +208,12 @@ def download_the_file(url,FileName, save_path):
     save_path = save_path.replace("/", "\\")
 
     print_ok(f"文件已保存到: {save_path}")
+
+    if contains_korean(save_path):
+        print_warning("检测到文件名包含韩国字符，即将使用md5修复，请注意")
+        md5_hash = mp3_to_md5(save_path)
+        os.rename(save_path, save_path.replace(FileName, md5_hash + ".mp3"))
+        save_path = save_path.replace(FileName, md5_hash + ".mp3")
 
     if addsoundpad:
         print_status("正在将文件添加到Soundpad...")

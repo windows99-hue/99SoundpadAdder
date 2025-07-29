@@ -186,11 +186,6 @@ def get_the_file_netcloud(url):
 
 def download_the_file(url, FileName, save_path):  
 
-    if contains_korean(save_path):
-        print_warning("检测到文件名包含韩国字符，即将使用md5修复，请注意")
-        md5_hash = mp3_to_md5(save_path)
-        save_path = save_path.replace(FileName, md5_hash + ".mp3")
-
     response = requests.get(url, stream=True)  
     response.raise_for_status()  
 
@@ -207,7 +202,13 @@ def download_the_file(url, FileName, save_path):
             file.write(chunk)  
             bar.update(len(chunk))  # Update progress bar  
 
-    save_path = save_path.replace("/", "\\")  
+    save_path = save_path.replace("/", "\\")
+
+    if contains_korean(save_path):
+        print_warning("Find Korean Characters! Fixed.")
+        md5_hash = mp3_to_md5(save_path)
+        os.rename(save_path, save_path.replace(FileName, md5_hash + ".mp3"))
+        save_path = save_path.replace(FileName, md5_hash + ".mp3")
 
     print_ok(f"File saved to: {save_path}")  
 
