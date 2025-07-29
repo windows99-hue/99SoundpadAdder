@@ -14,6 +14,7 @@ import win32file
 import pywintypes  
 import win32api  
 from urllib.parse import quote  
+import hashlib
 
 initsystem()  
 
@@ -53,6 +54,14 @@ while True:
     else:  
         print_error("Unknown command, please re-enter")  
 
+def contains_korean(text):
+    for char in text:
+        if ('\u1100' <= char <= '\u11FF' or
+            '\u3130' <= char <= '\u318F' or
+            '\uAC00' <= char <= '\uD7AF'):
+            return True
+    return False
+
 ##### Read the configuration and initialize them  
 config = configparser.ConfigParser()  
 config.read(self_dir + "configs.ini", encoding="utf-8")  
@@ -64,6 +73,10 @@ cookies_path = config.get("settings", "CookiePath")
 if not os.path.isabs(cookies_path):  
     script_dir = os.path.dirname(os.path.abspath(__file__))  
     cookies_path = os.path.join(script_dir, cookies_path)  
+
+if contains_korean(SavePath):
+    print_error("Detected that the save path contains Korean characters, please modify the save path in the configuration file.")
+    sys.exit(1)
 
 WAIT_TIME = 1  
 songinfo = None  
@@ -147,6 +160,14 @@ def clean_filename(filename):
     # Replace illegal characters with underscores  
     return re.sub(r'[\\/:*?"<>|]', '_', filename)  
 
+def mp3_to_md5(file_path):
+    """计算MP3文件的MD5哈希值"""
+    hash_md5 = hashlib.md5()
+    with open(file_path, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            hash_md5.update(chunk)
+    return hash_md5.hexdigest()
+
 def get_the_file(url):  
     response = requests.get(url)  
     data = json.loads(response.text)['data']  
@@ -164,6 +185,12 @@ def get_the_file_netcloud(url):
     download_the_file(url, song_title + ".m4a", SavePath + "\\" + song_title + ".m4a")  
 
 def download_the_file(url, FileName, save_path):  
+
+    if contains_korean(save_path):
+        print_warning("检测到文件名包含韩国字符，即将使用md5修复，请注意")
+        md5_hash = mp3_to_md5(save_path)
+        save_path = save_path.replace(FileName, md5_hash + ".mp3")
+
     response = requests.get(url, stream=True)  
     response.raise_for_status()  
 

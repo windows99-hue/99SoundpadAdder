@@ -14,6 +14,7 @@ import win32file
 import pywintypes
 import win32api
 from urllib.parse import quote
+import hashlib
 
 initsystem()
 
@@ -53,6 +54,15 @@ while True:
     else:
         print_error("未知的指令，请重新输入")
 
+    
+def contains_korean(text):
+    for char in text:
+        if ('\u1100' <= char <= '\u11FF' or
+            '\u3130' <= char <= '\u318F' or
+            '\uAC00' <= char <= '\uD7AF'):
+            return True
+    return False
+
 #####读取配置并初始化他们
 config = configparser.ConfigParser()
 config.read(self_dir+"configs.ini",encoding="utf-8")
@@ -60,6 +70,10 @@ SavePath = config.get("settings", "SavePath")
 soundpad_path = config.get("settings", "SoundpadPath")
 addsoundpad = config.getboolean("settings", "AddSoundpad")
 cookies_path = config.get("settings", "CookiePath")
+
+if contains_korean(SavePath):
+    print_error("检测到保存路径包含韩国字符，请修改配置文件中的保存路径")
+    sys.exit(1)
 
 if not os.path.isabs(cookies_path):
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -103,10 +117,10 @@ def add_sound_to_soundpad(file_path: str) -> bool:
             0,
             None
         )
-        
+
         #发送 DoAddSound 命令
         command = f'DoAddSound("{os.path.abspath(file_path)}")'
-        print_status(command)
+
         win32file.WriteFile(handle, str.encode(command,encoding="GBK"))
         response = win32file.ReadFile(handle, 4096)[1].decode().strip('\x00')
         print_status(f"Soundpad 已响应")
@@ -157,18 +171,29 @@ def get_the_file(url):
     PlayUrl = data['play_url']
     FileName = data['audio_name'] + ".mp3"
     FileName = clean_filename(FileName)
-    print(file_dir + FileName)
     download_the_file(PlayUrl,FileName , SavePath + "\\" + FileName)
 
 def get_the_file_netcloud(url):
     #fuck...
     song_title = driver.title[2:]
-    print_status(song_title)
-
     download_the_file(url, song_title + ".m4a", SavePath + "\\" + song_title + ".m4a")
     
+def mp3_to_md5(file_path):
+    """计算MP3文件的MD5哈希值"""
+    hash_md5 = hashlib.md5()
+    with open(file_path, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            hash_md5.update(chunk)
+    return hash_md5.hexdigest()
+
 
 def download_the_file(url,FileName, save_path):
+
+    if contains_korean(save_path):
+        print_warning("检测到文件名包含韩国字符，即将使用md5修复，请注意")
+        md5_hash = mp3_to_md5(save_path)
+        save_path = save_path.replace(FileName, md5_hash + ".mp3")
+
     response = requests.get(url, stream=True)
     response.raise_for_status()
 

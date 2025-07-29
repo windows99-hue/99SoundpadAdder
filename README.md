@@ -52,7 +52,7 @@ target_url = https://music.163.com
 
 3. 复制`Soundpad.exe`的文件绝对路径即可
 
-请将`SavePath`设置为您想**将音乐文件存储的路径**
+请将`SavePath`设置为您想**将音乐文件存储的路径，不要有韩文**
 
 `AddSoundPad`是一个布尔开关，当值为`True`时，程序会在下载完音频后自动导入soundpad，如果为`False`，那么程序会在下载完音频后自动准备下一轮下载
 

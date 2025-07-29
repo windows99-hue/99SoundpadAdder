@@ -52,7 +52,7 @@ https://raw.githubusercontent.com/windows99-hue/99SoundpadAdder/refs/heads/main/
 
 1. Copy the absolute path of the `Soundpad.exe` file.
 
-Set `SavePath` to the path where you want **the music files to be stored**.
+Set `SavePath` to the path where you want **the music files to be stored. Don't have Korean charactors**.
 
 `AddSoundPad` is a boolean switch. When set to `True`, the program will automatically import downloaded audio into Soundpad. If set to `False`, the program will prepare for the next download after completing the current one.
 
